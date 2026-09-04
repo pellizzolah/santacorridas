@@ -1,4 +1,4 @@
-# IFitness - Aplicativo de Corrida 🏃
+# Santa Corridas - Aplicativo de Corrida 🏃
 
 Aplicação web completa para registro e acompanhamento de corridas, com estatísticas avançadas, metas, conquistas e ranking.
 
@@ -65,5 +65,5 @@ Aplicação web completa para registro e acompanhamento de corridas, com estatí
 
 1. **Clone ou extraia o projeto**
    ```bash
-   git clone https://github.com/seu-usuario/ifitness.git
-   cd ifitness
+   git clone https://github.com/seu-usuario/santacorridas.git
+   cd santacorridas
