@@ -1,4 +1,4 @@
-# Santa Corridas - Aplicativo de Corrida 🏃
+# Santa Corridas- Aplicativo de Corrida 🏃
 
 Aplicação web completa para registro e acompanhamento de corridas, com estatísticas avançadas, metas, conquistas e ranking.
 
