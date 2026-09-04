@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Santa corridas{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 animate-fade-in"><i class="bi bi-speedometer2 me-2"></i>Seu Dashboard</h2>
+
+<!-- Cartões de estatísticas -->
+<div class="row g-4">
+    <div class="col-md-3 col-sm-6 animate-fade-in-up">
+        <div class="card stat-card bg-primary-gradient text-white h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-arrows-move me-2"></i>Distância Total</h5>
+                <h2 class="display-6">{{ "%.2f"|format(total_distance) }} km</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 animate-fade-in-up delay-1">
+        <div class="card stat-card bg-success-gradient text-white h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-clock me-2"></i>Tempo Total</h5>
+                <h2 class="display-6">{{ "%.1f"|format(total_duration) }} min</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 animate-fade-in-up delay-2">
+        <div class="card stat-card bg-warning-gradient text-white h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-flag me-2"></i>Corridas</h5>
+                <h2 class="display-6">{{ total_runs }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 animate-fade-in-up delay-3">
+        <div class="card stat-card bg-info-gradient text-white h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-stopwatch me-2"></i>Ritmo Médio</h5>
+                <h2 class="display-6">{{ "%.2f"|format(avg_pace) }} min/km</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 animate-fade-in-up delay-4">
+        <div class="card stat-card bg-secondary-gradient text-white h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-fire me-2"></i>Calorias</h5>
+                <h2 class="display-6">{{ "%.0f"|format(calories) }} kcal</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 animate-fade-in-up delay-5">
+        <div class="card stat-card bg-danger-gradient text-white h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-gauge me-2"></i>Velocidade Média</h5>
+                <h2 class="display-6">{{ "%.2f"|format(avg_speed) }} km/h</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos -->
+<div class="row mt-4">
+    <div class="col-lg-6 mb-4 animate-fade-in-left">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-bar-chart me-2"></i>Distância por Mês</h5>
+                <div class="chart-container">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-4 animate-fade-in-right">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-graph-up me-2"></i>Ritmo Recente (min/km)</h5>
+                <div class="chart-container">
+                    <canvas id="paceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Metas ativas -->
+{% if active_goals %}
+<div class="card mb-4 animate-fade-in-up">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-bullseye me-2"></i>Metas Ativas</h5>
+        <div class="row">
+            {% for goal in active_goals %}
+            <div class="col-md-4 mb-3">
+                <div class="p-3 bg-light rounded">
+                    {% if goal.goal_type == 'distance_month' %}
+                        <p class="mb-1">Meta de distância mensal: {{ goal.target_value }} km</p>
+                        {% set progress = 50 %}
+                    {% elif goal.goal_type == 'run_count' %}
+                        <p class="mb-1">Meta de número de corridas: {{ goal.target_value }}</p>
+                        {% set progress = 50 %}
+                    {% elif goal.goal_type == 'pace' %}
+                        <p class="mb-1">Meta de ritmo: {{ goal.target_value }} min/km</p>
+                        {% set progress = 50 %}
+                    {% endif %}
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: {{ progress }}%">{{ progress }}%</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <a href="{{ url_for('goals') }}" class="btn btn-sm btn-outline-primary">Gerenciar Metas</a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Medalhas recentes -->
+{% if recent_badges %}
+<div class="card mb-4 animate-fade-in-up">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-award me-2"></i>Conquistas Recentes</h5>
+        <div class="d-flex flex-wrap">
+            {% for ub in recent_badges %}
+            <div class="text-center me-4">
+                <i class="bi {{ ub.badge.icon }} display-6 text-warning"></i>
+                <p class="small mb-0">{{ ub.badge.name }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Últimas corridas -->
+<div class="card animate-fade-in-up">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-clock-history me-2"></i>Últimas Corridas</h5>
+        {% if runs %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Distância (km)</th>
+                        <th>Duração (min)</th>
+                        <th>Ritmo (min/km)</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for run in runs %}
+                    <tr>
+                        <td>{{ run.date.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ "%.2f"|format(run.distance_km) }}</td>
+                        <td>{{ "%.1f"|format(run.duration_minutes) }}</td>
+                        <td>{{ "%.2f"|format(run.pace) }}</td>
+                        <td>
+                            <a href="{{ url_for('run_detail', run_id=run.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <a href="{{ url_for('list_runs') }}" class="btn btn-outline-secondary btn-sm">Ver todas</a>
+        {% else %}
+        <p class="text-muted">Você ainda não registrou nenhuma corrida.</p>
+        <a href="{{ url_for('add_run') }}" class="btn btn-primary">Registrar Primeira Corrida</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Gráfico mensal
+    const monthlyChartCanvas = document.getElementById('monthlyChart');
+    if (monthlyChartCanvas) {
+        const months = JSON.parse('{{ months_labels|tojson|safe }}');
+        const distances = JSON.parse('{{ monthly_distances|tojson|safe }}');
+        new Chart(monthlyChartCanvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Distância (km)',
+                    data: distances,
+                    backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                    borderColor: 'rgba(102, 126, 234, 1)',
+                    borderWidth: 1,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 1500, easing: 'easeInOutQuart' },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Distância (km)' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // Gráfico de ritmo
+    const paceChartCanvas = document.getElementById('paceChart');
+    if (paceChartCanvas) {
+        const paceLabels = JSON.parse('{{ pace_labels|tojson|safe }}');
+        const paceData = JSON.parse('{{ pace_data|tojson|safe }}');
+        new Chart(paceChartCanvas.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: paceLabels,
+                datasets: [{
+                    label: 'Ritmo (min/km)',
+                    data: paceData,
+                    borderColor: 'rgba(245, 87, 108, 1)',
+                    backgroundColor: 'rgba(245, 87, 108, 0.2)',
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 1500, easing: 'easeInOutQuart' },
+                scales: {
+                    y: { beginAtZero: false, title: { display: true, text: 'min/km' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

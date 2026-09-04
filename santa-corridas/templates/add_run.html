@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar Corrida - Santa corridas{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card p-4 animate-fade-in-up">
+            <h2 class="mb-4"><i class="bi bi-plus-circle me-2"></i>Registrar Nova Corrida</h2>
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="distance" class="form-label">Distância (km)</label>
+                    <input type="number" step="0.01" min="0.1" class="form-control" id="distance" name="distance" required>
+                </div>
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="hours" class="form-label">Horas</label>
+                        <input type="number" min="0" class="form-control" id="hours" name="hours" value="0">
+                    </div>
+                    <div class="col">
+                        <label for="minutes" class="form-label">Minutos</label>
+                        <input type="number" min="0" max="59" class="form-control" id="minutes" name="minutes" value="0">
+                    </div>
+                    <div class="col">
+                        <label for="seconds" class="form-label">Segundos</label>
+                        <input type="number" min="0" max="59" class="form-control" id="seconds" name="seconds" value="0">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="date" class="form-label">Data</label>
+                    <input type="date" class="form-control" id="date" name="date" value="{{ today }}">
+                </div>
+                <div class="mb-3">
+                    <label for="route_name" class="form-label">Nome do Percurso (opcional)</label>
+                    <input type="text" class="form-control" id="route_name" name="route_name" placeholder="Ex: Parque da Cidade">
+                </div>
+                <div class="mb-3">
+                    <label for="notes" class="form-label">Notas (opcional)</label>
+                    <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Salvar Corrida</button>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script>
+    // Dispara confete se houver flash de sucesso
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            {% if category == 'success' %}
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            {% endif %}
+        {% endfor %}
+    {% endwith %}
+</script>
+{% endblock %}

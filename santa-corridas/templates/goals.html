@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Metas - santa corridas{% endblock %}
+{% block content %}
+<h2><i class="bi bi-bullseye me-2"></i>Minhas Metas</h2>
+
+<div class="card p-4 mb-4">
+    <h5>Criar Nova Meta</h5>
+    <form method="POST" class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label">Tipo de Meta</label>
+            <select name="goal_type" class="form-select" required>
+                <option value="distance_month">Distância Mensal (km)</option>
+                <option value="run_count">Número de Corridas</option>
+                <option value="pace">Ritmo Alvo (min/km)</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Valor Alvo</label>
+            <input type="number" step="0.1" name="target_value" class="form-control" required>
+        </div>
+        <div class="col-md-3 align-self-end">
+            <button type="submit" class="btn btn-primary w-100">Adicionar Meta</button>
+        </div>
+    </form>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h5>Metas Ativas</h5>
+            {% for goal in active_goals %}
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <strong>{{ goal.goal_type }}</strong> alvo: {{ goal.target_value }}
+                </div>
+                <form method="POST" action="{{ url_for('delete_goal', goal_id=goal.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                </form>
+            </div>
+            {% else %}
+            <p class="text-muted">Nenhuma meta ativa.</p>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h5>Metas Concluídas</h5>
+            {% for goal in achieved_goals %}
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span>{{ goal.goal_type }} - {{ goal.target_value }}</span>
+                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Alcançada</span>
+            </div>
+            {% else %}
+            <p class="text-muted">Nenhuma meta concluída ainda.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

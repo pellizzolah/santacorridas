@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes da Corrida - santa corridas{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="card-title mb-0">Detalhes da Corrida</h3>
+                    <button class="btn btn-outline-danger btn-sm like-btn" data-run-id="{{ run.id }}">
+                        <i class="bi bi-heart me-1"></i>
+                        <span class="like-count">{{ run.likes|length }}</span>
+                    </button>
+                </div>
+                
+                <table class="table">
+                    <tr>
+                        <th>Data</th>
+                        <td>{{ run.date.strftime('%d/%m/%Y %H:%M') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Distância</th>
+                        <td>{{ "%.2f"|format(run.distance_km) }} km</td>
+                    </tr>
+                    <tr>
+                        <th>Duração</th>
+                        <td>{{ "%.1f"|format(run.duration_minutes) }} minutos</td>
+                    </tr>
+                    <tr>
+                        <th>Ritmo Médio</th>
+                        <td>{{ "%.2f"|format(run.pace) }} min/km</td>
+                    </tr>
+                    <tr>
+                        <th>Velocidade Média</th>
+                        <td>{{ "%.2f"|format(run.speed) }} km/h</td>
+                    </tr>
+                    {% if run.calories %}
+                    <tr>
+                        <th>Calorias</th>
+                        <td>{{ "%.0f"|format(run.calories) }} kcal</td>
+                    </tr>
+                    {% endif %}
+                    {% if run.route_name %}
+                    <tr>
+                        <th>Percurso</th>
+                        <td>{{ run.route_name }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if run.notes %}
+                    <tr>
+                        <th>Notas</th>
+                        <td>{{ run.notes }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+                
+                {% if run.user_id == current_user.id %}
+                <div class="mt-3">
+                    <a href="{{ url_for('edit_run', run_id=run.id) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil me-1"></i>Editar
+                    </a>
+                    <form action="{{ url_for('delete_run', run_id=run.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir esta corrida?');">
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="bi bi-trash me-1"></i>Excluir
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Comentários -->
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="mb-3">
+                    <i class="bi bi-chat me-2"></i>Comentários ({{ run.comments|length }})
+                </h5>
+                
+                <!-- Formulário de comentário -->
+                <form action="{{ url_for('comment_run', run_id=run.id) }}" method="POST" class="mb-4">
+                    <div class="input-group">
+                        <input type="text" name="content" class="form-control" placeholder="Escreva um comentário..." required>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send"></i>
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Lista de comentários -->
+                {% for comment in run.comments|reverse %}
+                <div class="d-flex mb-3">
+                    <div class="me-3">
+                        <i class="bi bi-person-circle text-primary" style="font-size: 2rem;"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="bg-light rounded p-2">
+                            <a href="{{ url_for('public_profile', username=comment.user.username) }}" class="text-decoration-none">
+                                <strong>{{ comment.user.username }}</strong>
+                            </a>
+                            <p class="mb-0">{{ comment.content }}</p>
+                        </div>
+                        <small class="text-muted">{{ comment.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted">Nenhum comentário ainda. Seja o primeiro!</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5>Informações do Corredor</h5>
+                <a href="{{ url_for('public_profile', username=run.user.username) }}" class="text-decoration-none">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-person-circle text-primary me-2" style="font-size: 2.5rem;"></i>
+                        <strong>{{ run.user.username }}</strong>
+                    </div>
+                </a>
+                <a href="{{ url_for('public_profile', username=run.user.username) }}" class="btn btn-outline-primary btn-sm w-100">
+                    Ver Perfil Completo
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelector('.like-btn')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const runId = btn.dataset.runId;
+    const response = await fetch(`/like_run/${runId}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'}
+    });
+    const data = await response.json();
+    btn.querySelector('.like-count').textContent = data.count;
+    if (data.liked) {
+        btn.classList.add('btn-danger');
+        btn.classList.remove('btn-outline-danger');
+    } else {
+        btn.classList.remove('btn-danger');
+        btn.classList.add('btn-outline-danger');
+    }
+});
+</script>
+{% endblock %}

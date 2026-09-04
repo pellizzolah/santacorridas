@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Santa corridas - Início{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <h1 class="display-3 fw-bold mb-3">
+        <i class="bi bi-lightning-charge-fill text-primary"></i> Santa corridas
+    </h1>
+    <p class="lead text-muted mb-4">Registre suas corridas, acompanhe seu progresso e supere seus limites!</p>
+    {% if not current_user.is_authenticated %}
+        <div class="mt-4">
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-2 px-4">
+                <i class="bi bi-person-plus me-2"></i>Criar Conta Grátis
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg px-4">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
+            </a>
+        </div>
+    {% else %}
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg mt-4 px-5">
+            <i class="bi bi-speedometer2 me-2"></i>Ir para Dashboard
+        </a>
+    {% endif %}
+</div>
+
+<div class="row mt-5 text-center g-4">
+    <div class="col-md-4">
+        <div class="card h-100 p-4">
+            <i class="bi bi-graph-up-arrow display-4 text-primary mb-3"></i>
+            <h3>Estatísticas Detalhadas</h3>
+            <p class="text-muted">Acompanhe distância, tempo, ritmo, calorias e muito mais.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 p-4">
+            <i class="bi bi-bar-chart-line display-4 text-success mb-3"></i>
+            <h3>Gráficos Interativos</h3>
+            <p class="text-muted">Visualize sua evolução mensal e ritmo com gráficos dinâmicos.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 p-4">
+            <i class="bi bi-trophy display-4 text-warning mb-3"></i>
+            <h3>Conquistas e Ranking</h3>
+            <p class="text-muted">Ganhe medalhas e compare seu desempenho com outros corredores.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4 text-center g-4">
+    <div class="col-md-4">
+        <div class="card h-100 p-4">
+            <i class="bi bi-bullseye display-4 text-danger mb-3"></i>
+            <h3>Metas Personalizadas</h3>
+            <p class="text-muted">Defina objetivos de distância, frequência e ritmo.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 p-4">
+            <i class="bi bi-file-earmark-arrow-down display-4 text-info mb-3"></i>
+            <h3>Exportação de Dados</h3>
+            <p class="text-muted">Baixe suas corridas em CSV para análise externa.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 p-4">
+            <i class="bi bi-phone display-4 text-secondary mb-3"></i>
+            <h3>Design Responsivo</h3>
+            <p class="text-muted">Acesse de qualquer dispositivo, onde estiver.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Meu Perfil - santa corridas{% endblock %}
+{% block content %}
+<div class="card p-4">
+    <div class="row">
+        <div class="col-md-3 text-center">
+            <img src="{{ user.avatar if user.avatar != 'default.png' else 'https://via.placeholder.com/150' }}" class="avatar-img img-thumbnail mb-3" alt="Avatar">
+            <h4>{{ user.username }}</h4>
+            <p class="text-muted">{{ user.email }}</p>
+        </div>
+        <div class="col-md-9">
+            <h3>Estatísticas Gerais</h3>
+            <div class="row mt-3">
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded">
+                        <i class="bi bi-arrows-move text-primary"></i>
+                        <p class="mb-0">Distância total: <strong>{{ "%.2f"|format(user.get_total_distance()) }} km</strong></p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded">
+                        <i class="bi bi-flag text-success"></i>
+                        <p class="mb-0">Corridas: <strong>{{ user.get_total_runs() }}</strong></p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded">
+                        <i class="bi bi-stopwatch text-warning"></i>
+                        <p class="mb-0">Ritmo médio: <strong>{{ "%.2f"|format(user.get_avg_pace()) }} min/km</strong></p>
+                    </div>
+                </div>
+            </div>
+            {% if user.bio %}
+            <hr>
+            <h5>Sobre mim</h5>
+            <p>{{ user.bio }}</p>
+            {% endif %}
+            {% if user.weight_kg %}
+            <p>Peso: {{ user.weight_kg }} kg</p>
+            {% endif %}
+            {% if user.height_cm %}
+            <p>Altura: {{ user.height_cm }} cm</p>
+            {% endif %}
+            <a href="{{ url_for('settings') }}" class="btn btn-primary mt-3">Editar Perfil</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

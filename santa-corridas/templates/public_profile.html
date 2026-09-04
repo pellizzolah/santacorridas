@@ -1,0 +1,323 @@
+{% extends 'base.html' %}
+
+{% block title %}Perfil de {{ user.username }} - santa corridas{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Coluna Esquerda - Informações do Perfil -->
+    <div class="col-lg-4">
+        <!-- Card Principal do Perfil -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body p-4">
+                <!-- Avatar e Nome -->
+                <div class="text-center mb-4">
+                    {% if user.avatar and user.avatar != 'default.png' %}
+                        <img src="{{ user.avatar }}" 
+                             class="rounded-circle mb-3 shadow" 
+                             style="width: 120px; height: 120px; object-fit: cover;" 
+                             alt="Avatar de {{ user.username }}">
+                    {% else %}
+                        <i class="bi bi-person-circle display-1 text-primary"></i>
+                    {% endif %}
+                    
+                    <h3 class="mb-1">{{ user.username }}</h3>
+                    
+                    <p class="text-muted mb-2">
+                        <i class="bi bi-calendar me-1"></i>
+                        Membro desde {{ user.created_at.strftime('%d/%m/%Y') }}
+                    </p>
+                    
+                    <!-- Badge "Você" se for o próprio perfil -->
+                    {% if is_own_profile %}
+                        <span class="badge bg-primary">Este é o seu perfil</span>
+                    {% endif %}
+                    
+                    <!-- Botão Editar Perfil (apenas para o próprio usuário) -->
+                    {% if is_own_profile %}
+                    <div class="mt-3">
+                        <a href="{{ url_for('settings') }}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-pencil me-1"></i>Editar Perfil
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Botão Seguir/Deixar de Seguir -->
+                {% if not is_own_profile %}
+                <div class="text-center mb-4">
+                    {% if is_following %}
+                    <form action="{{ url_for('unfollow_user', username=user.username) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-check-circle me-1"></i>Seguindo
+                        </button>
+                    </form>
+                    {% else %}
+                    <form action="{{ url_for('follow_user', username=user.username) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-circle me-1"></i>Seguir
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Estatísticas de Seguidores -->
+                <div class="text-center mb-4">
+                    <div class="row">
+                        <div class="col-4">
+                            <h5 class="mb-0">{{ followers_count }}</h5>
+                            <small class="text-muted">Seguidores</small>
+                        </div>
+                        <div class="col-4">
+                            <h5 class="mb-0">{{ following_count }}</h5>
+                            <small class="text-muted">Seguindo</small>
+                        </div>
+                        <div class="col-4">
+                            <h5 class="mb-0">{{ total_runs }}</h5>
+                            <small class="text-muted">Corridas</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Biografia -->
+                {% if user.bio %}
+                <div class="mb-4">
+                    <h5 class="border-bottom pb-2">
+                        <i class="bi bi-person-lines-fill me-2"></i>Sobre mim
+                    </h5>
+                    <p class="mb-0">{{ user.bio }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Informações Físicas -->
+                <div class="mb-4">
+                    <h5 class="border-bottom pb-2">
+                        <i class="bi bi-info-circle me-2"></i>Informações
+                    </h5>
+                    <ul class="list-unstyled">
+                        {% if user.weight_kg %}
+                        <li class="mb-2">
+                            <i class="bi bi-speedometer me-2 text-primary"></i>
+                            <strong>Peso:</strong> {{ user.weight_kg }} kg
+                        </li>
+                        {% endif %}
+                        
+                        {% if user.height_cm %}
+                        <li class="mb-2">
+                            <i class="bi bi-rulers me-2 text-primary"></i>
+                            <strong>Altura:</strong> {{ user.height_cm }} cm
+                        </li>
+                        {% endif %}
+                        
+                        {% if user.weight_kg and user.height_cm %}
+                        <li class="mb-2">
+                            <i class="bi bi-calculator me-2 text-primary"></i>
+                            <strong>IMC:</strong> 
+                            {% set imc = user.weight_kg / ((user.height_cm/100) ** 2) %}
+                            {{ "%.1f"|format(imc) }}
+                            {% if imc < 18.5 %}
+                                <span class="badge bg-info">Abaixo do peso</span>
+                            {% elif imc < 25 %}
+                                <span class="badge bg-success">Peso normal</span>
+                            {% elif imc < 30 %}
+                                <span class="badge bg-warning">Sobrepeso</span>
+                            {% else %}
+                                <span class="badge bg-danger">Obesidade</span>
+                            {% endif %}
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <!-- Metas Ativas -->
+                {% if active_goals %}
+                <div class="mb-4">
+                    <h5 class="border-bottom pb-2">
+                        <i class="bi bi-bullseye me-2"></i>Metas Ativas
+                    </h5>
+                    {% for goal in active_goals %}
+                    <div class="mb-2 p-2 bg-light rounded">
+                        {% if goal.goal_type == 'distance_month' %}
+                            <span class="badge bg-primary">Distância</span>
+                            <span>{{ goal.target_value }} km/mês</span>
+                        {% elif goal.goal_type == 'run_count' %}
+                            <span class="badge bg-success">Corridas</span>
+                            <span>{{ goal.target_value }} corridas</span>
+                        {% elif goal.goal_type == 'pace' %}
+                            <span class="badge bg-warning">Ritmo</span>
+                            <span>{{ goal.target_value }} min/km</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Coluna Direita - Estatísticas e Corridas -->
+    <div class="col-lg-8">
+        <!-- Cartões de Estatísticas -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card stat-card bg-primary-gradient text-white h-100">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-arrows-move me-1"></i>Distância Total
+                        </h6>
+                        <h3>{{ "%.2f"|format(total_distance) }} km</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card bg-success-gradient text-white h-100">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-flag me-1"></i>Corridas
+                        </h6>
+                        <h3>{{ total_runs }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card bg-info-gradient text-white h-100">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-stopwatch me-1"></i>Ritmo Médio
+                        </h6>
+                        <h3>{{ "%.2f"|format(avg_pace) }} min/km</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card bg-warning-gradient text-white h-100">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-clock me-1"></i>Tempo Total
+                        </h6>
+                        <h3>{{ "%.1f"|format(total_duration) }} min</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card bg-danger-gradient text-white h-100">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-fire me-1"></i>Calorias
+                        </h6>
+                        <h3>{{ "%.0f"|format(calories) }} kcal</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card bg-secondary-gradient text-white h-100">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-gauge me-1"></i>Velocidade Média
+                        </h6>
+                        <h3>{{ "%.2f"|format(avg_speed) }} km/h</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conquistas (Badges) -->
+        {% if user_badges %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-body p-4">
+                <h5 class="mb-3">
+                    <i class="bi bi-award me-2"></i>Conquistas 
+                    <span class="badge bg-warning text-dark">{{ user_badges|length }}</span>
+                </h5>
+                <div class="row">
+                    {% for ub in user_badges %}
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <div class="text-center p-3 bg-light rounded h-100">
+                            <i class="bi {{ ub.badge.icon }} display-5 text-warning"></i>
+                            <p class="fw-bold mb-1">{{ ub.badge.name }}</p>
+                            <p class="text-muted small mb-1">{{ ub.badge.description }}</p>
+                            <small class="text-muted">
+                                <i class="bi bi-calendar-check me-1"></i>
+                                {{ ub.awarded_at.strftime('%d/%m/%Y') }}
+                            </small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Últimas Corridas -->
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h5 class="mb-3">
+                    <i class="bi bi-clock-history me-2"></i>Últimas Corridas
+                </h5>
+                
+                {% if recent_runs %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Data</th>
+                                <th>Distância</th>
+                                <th>Duração</th>
+                                <th>Ritmo</th>
+                                <th>Percurso</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for run in recent_runs %}
+                            <tr>
+                                <td>{{ run.date.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ "%.2f"|format(run.distance_km) }} km</td>
+                                <td>{{ "%.1f"|format(run.duration_minutes) }} min</td>
+                                <td>{{ "%.2f"|format(run.pace) }} min/km</td>
+                                <td>
+                                    {% if run.route_name %}
+                                        <span class="badge bg-info">{{ run.route_name }}</span>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('run_detail', run_id=run.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-emoji-neutral display-4 text-muted"></i>
+                    <p class="text-muted mt-2">Este usuário ainda não registrou corridas.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Botões de Navegação -->
+        <div class="mt-3 d-flex justify-content-between">
+            <a href="{{ url_for('ranking') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Voltar ao Ranking
+            </a>
+            
+            {% if not is_own_profile %}
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                <i class="bi bi-speedometer2 me-1"></i>Meu Dashboard
+            </a>
+            {% else %}
+            <a href="{{ url_for('add_run') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Registrar Corrida
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Configurações - santa corridas{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card p-4 mb-4">
+            <h4>Atualizar Perfil</h4>
+            <form method="POST">
+                <input type="hidden" name="action" value="update_profile">
+                <div class="mb-3">
+                    <label class="form-label">E-mail</label>
+                    <input type="email" name="email" class="form-control" value="{{ current_user.email }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Biografia</label>
+                    <textarea name="bio" class="form-control" rows="3">{{ current_user.bio or '' }}</textarea>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <label class="form-label">Peso (kg)</label>
+                        <input type="number" step="0.1" name="weight" class="form-control" value="{{ current_user.weight_kg or '' }}">
+                    </div>
+                    <div class="col">
+                        <label class="form-label">Altura (cm)</label>
+                        <input type="number" step="0.1" name="height" class="form-control" value="{{ current_user.height_cm or '' }}">
+                    </div>
+                </div>
+                <div class="mb-3 mt-3">
+                    <label class="form-label">URL do Avatar</label>
+                    <input type="text" name="avatar" class="form-control" value="{{ current_user.avatar if current_user.avatar != 'default.png' else '' }}" placeholder="https://exemplo.com/avatar.jpg">
+                </div>
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card p-4 mb-4">
+            <h4>Alterar Senha</h4>
+            <form method="POST">
+                <input type="hidden" name="action" value="change_password">
+                <div class="mb-3">
+                    <label class="form-label">Senha Atual</label>
+                    <input type="password" name="current_password" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Nova Senha</label>
+                    <input type="password" name="new_password" class="form-control" required minlength="6">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Confirmar Nova Senha</label>
+                    <input type="password" name="confirm_password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-warning">Alterar Senha</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
