@@ -7,7 +7,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, extract
-import json
 
 app = Flask(__name__)
 app.config.from_object('config.Config')
@@ -36,6 +35,7 @@ class User(UserMixin, db.Model):
     badges = db.relationship('UserBadge', backref='user', lazy=True, cascade='all, delete-orphan')
     likes_given = db.relationship('Like', backref='user', lazy=True, cascade='all, delete-orphan')
     comments = db.relationship('Comment', backref='user', lazy=True, cascade='all, delete-orphan')
+    notifications = db.relationship('Notification', foreign_keys='Notification.user_id', backref='notified_user', lazy=True, cascade='all, delete-orphan')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -80,6 +80,45 @@ class User(UserMixin, db.Model):
 
     def get_following_count(self):
         return Follower.query.filter_by(follower_id=self.id).count()
+
+    def get_unread_notifications_count(self):
+        return Notification.query.filter_by(user_id=self.id, read=False).count()
+
+    def get_personal_records(self):
+        records = {}
+        max_run = Run.query.filter_by(user_id=self.id).order_by(Run.distance_km.desc()).first()
+        if max_run:
+            records['max_distance'] = max_run.distance_km
+        
+        fastest_run = Run.query.filter_by(user_id=self.id).filter(Run.distance_km >= 1).order_by(Run.duration_minutes / Run.distance_km).first()
+        if fastest_run:
+            records['fastest_pace'] = fastest_run.pace
+            records['fastest_run_distance'] = fastest_run.distance_km
+        
+        for dist in [5, 10, 21, 42]:
+            best = Run.query.filter_by(user_id=self.id).filter(Run.distance_km >= dist).order_by(Run.duration_minutes / Run.distance_km).first()
+            if best:
+                records[f'best_{dist}km'] = best.pace
+        
+        return records
+
+    def get_current_streak(self):
+        runs = Run.query.filter_by(user_id=self.id).order_by(Run.date.desc()).all()
+        if not runs:
+            return 0
+        
+        streak = 0
+        current_date = datetime.utcnow().date()
+        run_dates = set(r.date.date() for r in runs)
+        
+        if current_date not in run_dates:
+            current_date -= timedelta(days=1)
+        
+        while current_date in run_dates:
+            streak += 1
+            current_date -= timedelta(days=1)
+        
+        return streak
 
 
 class Run(db.Model):
@@ -179,6 +218,19 @@ class Comment(db.Model):
     run_id = db.Column(db.Integer, db.ForeignKey('runs.id'), nullable=False)
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    notification_type = db.Column(db.String(30), nullable=False)
+    message = db.Column(db.String(255), nullable=False)
+    read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_notifications')
 
 
 # ==================== FUNÇÕES AUXILIARES ====================
@@ -651,6 +703,15 @@ def follow_user(username):
     else:
         new_follow = Follower(follower_id=current_user.id, followed_id=user_to_follow.id)
         db.session.add(new_follow)
+        
+        notification = Notification(
+            user_id=user_to_follow.id,
+            sender_id=current_user.id,
+            notification_type='follow',
+            message=f'{current_user.username} começou a seguir você!'
+        )
+        db.session.add(notification)
+        
         db.session.commit()
         flash(f'Você agora está seguindo {user_to_follow.username}!', 'success')
     
@@ -697,6 +758,16 @@ def like_run(run_id):
     else:
         new_like = Like(user_id=current_user.id, run_id=run_id)
         db.session.add(new_like)
+        
+        if run.user_id != current_user.id:
+            notification = Notification(
+                user_id=run.user_id,
+                sender_id=current_user.id,
+                notification_type='like',
+                message=f'{current_user.username} curtiu sua corrida!'
+            )
+            db.session.add(notification)
+        
         db.session.commit()
         return jsonify({'liked': True, 'count': run.get_likes_count()})
 
@@ -710,12 +781,61 @@ def comment_run(run_id):
     if content:
         comment = Comment(user_id=current_user.id, run_id=run_id, content=content)
         db.session.add(comment)
+        
+        if run.user_id != current_user.id:
+            notification = Notification(
+                user_id=run.user_id,
+                sender_id=current_user.id,
+                notification_type='comment',
+                message=f'{current_user.username} comentou na sua corrida: "{content[:50]}"'
+            )
+            db.session.add(notification)
+        
         db.session.commit()
         flash('Comentário adicionado!', 'success')
     else:
         flash('O comentário não pode ser vazio.', 'danger')
     
     return redirect(url_for('run_detail', run_id=run_id))
+
+
+# ==================== ROTAS DE NOTIFICAÇÕES ====================
+
+@app.route('/notifications')
+@login_required
+def notifications():
+    notifications = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).limit(50).all()
+    unread_count = current_user.get_unread_notifications_count()
+    return render_template('notifications.html', notifications=notifications, unread_count=unread_count)
+
+
+@app.route('/notifications/read_all', methods=['POST'])
+@login_required
+def mark_all_notifications_read():
+    Notification.query.filter_by(user_id=current_user.id, read=False).update({'read': True})
+    db.session.commit()
+    return redirect(url_for('notifications'))
+
+
+@app.route('/notification/<int:notif_id>/read', methods=['POST'])
+@login_required
+def mark_notification_read(notif_id):
+    notification = Notification.query.get_or_404(notif_id)
+    if notification.user_id != current_user.id:
+        abort(403)
+    notification.read = True
+    db.session.commit()
+    return jsonify({'success': True})
+
+
+# ==================== ROTAS DE RECORDES ====================
+
+@app.route('/personal_records')
+@login_required
+def personal_records():
+    records = current_user.get_personal_records()
+    streak = current_user.get_current_streak()
+    return render_template('personal_records.html', records=records, streak=streak)
 
 
 # ==================== ROTA DE EXPORTAÇÃO ====================
@@ -756,7 +876,8 @@ def init_db_command():
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()
+        db.drop_all()  # Remove todas as tabelas antigas
+        db.create_all()  # Cria todas as tabelas novamente
         if Badge.query.count() == 0:
             seed_badges()
     app.run(debug=True)

@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Recordes Pessoais - Santa Corridas{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 animate-fade-in"><i class="bi bi-trophy-fill me-2"></i>Recordes Pessoais</h2>
+
+<!-- Streak -->
+<div class="card mb-4 animate-fade-in-up">
+    <div class="card-body text-center p-4">
+        <h5 class="text-muted mb-2">Sequência Atual de Dias Correndo</h5>
+        <h1 class="display-3 fw-bold text-primary">{{ streak }} 🔥</h1>
+        <p class="text-muted">dias consecutivos</p>
+        {% if streak >= 7 %}
+            <span class="badge bg-success fs-5"><i class="bi bi-fire me-1"></i>Excelente trabalho!</span>
+        {% elif streak >= 3 %}
+            <span class="badge bg-info fs-5"><i class="bi bi-fire me-1"></i>Continue assim!</span>
+        {% else %}
+            <span class="badge bg-secondary fs-5">Comece uma sequência hoje!</span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <!-- Maior distância -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 animate-fade-in-left">
+            <div class="card-body text-center p-4">
+                <i class="bi bi-arrows-move display-4 text-primary mb-3"></i>
+                <h5>Maior Distância Única</h5>
+                {% if records.get('max_distance') %}
+                    <h2 class="fw-bold">{{ "%.2f"|format(records['max_distance']) }} km</h2>
+                {% else %}
+                    <p class="text-muted">Nenhuma corrida registrada</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ritmo mais rápido -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 animate-fade-in-right">
+            <div class="card-body text-center p-4">
+                <i class="bi bi-lightning-fill display-4 text-warning mb-3"></i>
+                <h5>Ritmo Mais Rápido</h5>
+                {% if records.get('fastest_pace') %}
+                    <h2 class="fw-bold">{{ "%.2f"|format(records['fastest_pace']) }} min/km</h2>
+                    <p class="text-muted">em {{ "%.2f"|format(records['fastest_run_distance']) }} km</p>
+                {% else %}
+                    <p class="text-muted">Nenhuma corrida registrada</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Melhores tempos por distância -->
+<div class="card animate-fade-in-up">
+    <div class="card-body p-4">
+        <h5 class="mb-3"><i class="bi bi-stopwatch me-2"></i>Melhores Ritmos por Distância</h5>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Distância</th>
+                        <th>Melhor Ritmo</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>5 km</td>
+                        <td>
+                            {% if records.get('best_5km') %}
+                                {{ "%.2f"|format(records['best_5km']) }} min/km
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if records.get('best_5km') %}
+                                <span class="badge bg-success">Completo</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Pendente</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>10 km</td>
+                        <td>
+                            {% if records.get('best_10km') %}
+                                {{ "%.2f"|format(records['best_10km']) }} min/km
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if records.get('best_10km') %}
+                                <span class="badge bg-success">Completo</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Pendente</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Meia Maratona (21 km)</td>
+                        <td>
+                            {% if records.get('best_21km') %}
+                                {{ "%.2f"|format(records['best_21km']) }} min/km
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if records.get('best_21km') %}
+                                <span class="badge bg-success">Completo</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Pendente</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Maratona (42 km)</td>
+                        <td>
+                            {% if records.get('best_42km') %}
+                                {{ "%.2f"|format(records['best_42km']) }} min/km
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if records.get('best_42km') %}
+                                <span class="badge bg-success">Completo</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Pendente</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
